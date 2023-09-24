@@ -8,12 +8,12 @@
 
     $row = 1;
     $column  = 1;
-    $num_column_lines = 0;
+    $position = 0;
 
     $today = date("F Y");
 
-    define('LINES_PER_COLUMN', get_lines_per_column($height));
-    echo LINES_PER_COLUMN;
+    $line_height = 8;
+    $brai = new BRAIHelpers($height, $line_height);
 @endphp
     <!DOCTYPE html>
 <html lang="en">
@@ -34,18 +34,18 @@
             counter-increment: page 1;
             counter-reset: page{{ $numbering - 1 }};
             font-family: {{ $font }};
-            font-size: 12px;
+            font-size: {{ $line_height }}px;
         }
 
         h1 {
             border-bottom: 0.5px solid black;
-            font-size: 16px;
+            font-size: 11px;
             margin: 0 0 10px;
             padding-bottom: 4px;
         }
         h3 {
             font-weight: normal;
-            font-size: 11px;
+            font-size: 10px;
             margin: 1px 0 3px;
             page-break-after: avoid;
             text-decoration: underline;
@@ -93,7 +93,6 @@
 
         .brai-day {
             border: 1px solid black;
-            margin: 20px 0;
             padding: 4px;
             text-align: center;
         }
@@ -157,103 +156,37 @@
     <footer>{{ $today  }}</footer>
 @endif
 <main>
-    @if (in_array('legend', $options))
-        @include('legend', compact('types_in_use', 'types'))
-        <div class="row"></div>
-    @endif
+    @include('legend', compact('types_in_use', 'types'))
+    <div class="row"></div>
 
-    @if ($group_by === 'day-region')
-        @foreach ($days as $day => $regions)
-            @if (!$loop->first)
-                @php
-                    echo '</div></div>';
-                    $row++;
-                    $column = 1;
-                    $num_column_lines = 0;
-                @endphp
-            @endif
-            <div class="row"><h1 class="brai-day">{{ strtoupper($day) }}</h1><div class="column">
+    @foreach ($days as $day => $meetings)
+        @if ($loop->first)
+            <div class="row"><div class="column"><?php print $brai->newDay($day); ?>
             @php
-                list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines, LINES_PER_COLUMN);
-                $num_column_lines++;
+                $column = 1;
+                $position = 1;
             @endphp
-
-            @foreach ($regions as $region => $meetings)
-                @php
-                    list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines, LINES_PER_COLUMN, $day);
-                    echo '<div class="region">';
-                    if ($region) {
-                        echo '<h3>' . $region . '</h3></div>';
-                        $num_column_lines++;
-                    }
-                @endphp
-
-                @foreach ($meetings as $meeting)
-                    @php
-                        $num_meeting_lines = get_num_meeting_lines($meeting);
-                        list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines, LINES_PER_COLUMN, $day);
-                        $num_column_lines += $num_meeting_lines;
-                    @endphp
-                    @include('meeting', compact('meeting', 'region'))
-                @endforeach
-            @endforeach
-        @endforeach
-    </div></div>
-    @elseif ($group_by === 'region-day')
-        @foreach ($regions as $region => $days)
-            @if (!$loop->first)
-                    <?php list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines); ?>
-            @else
-                <div class="row"><div class="column"><div class="region"><h1>{{ $region }}</h1></div>
-            @endif
-                <?php $num_column_lines++; ?>
-            @foreach ($days as $day => $meetings)
-                @php
-                    list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines);
-                    $num_column_lines++;
-                @endphp
-                <h3>{{ $day }}</h3>
-                @foreach ($meetings as $meeting)
-                    @php
-                        $num_meeting_lines = get_num_meeting_lines($meeting);
-                        list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines);
-                        $num_column_lines += $num_meeting_lines;
-                    @endphp
-                    @include('meeting', compact('meeting', 'region'))
-                @endforeach
-            @endforeach
-        @endforeach
-        </div></div>
-    @else
-        @foreach ($days as $day => $meetings)
-            @if ($loop->first)
-                @php
-                    printf('<div class="row"><div class="column"><h1 class="brai-day">%s</h1>', strtoupper($day));
-                    $column = 1;
-                    $num_column_lines = 1;
-                @endphp
-            @else
-                @php
-                    printf('<h1 class="brai-day">%s</h1>', strtoupper($day));
-                    $num_column_lines++;
-                @endphp
-            @endif
-
+        @else
             @php
-                list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines, LINES_PER_COLUMN);
-                $num_column_lines++;
+                print $brai->newDay($day);
+                $position++;
             @endphp
-            @foreach ($meetings as $meeting)
-                @php
-                    $num_meeting_lines = get_num_meeting_lines($meeting);
-                    list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines, LINES_PER_COLUMN, $day);
-                    $num_column_lines += $num_meeting_lines;
-                @endphp
-                @include('brai-meeting', compact('meeting'))
-            @endforeach
+        @endif
+
+        @php
+            $brai->next($row, $column, $position);
+            $position++;
+        @endphp
+        @foreach ($meetings as $meeting)
+            @php
+                $num_meeting_lines = $brai->getNumMeetingLines($meeting);
+                $brai->next($row, $column, $position, $day);
+                $position += $num_meeting_lines;
+            @endphp
+            @include('brai-meeting', compact('meeting'))
         @endforeach
-        <?php echo "</div></div>"; ?>
-    @endif
+    @endforeach
+    <?php echo "</div></div>"; ?>
 </main>
 </body>
 </html>

@@ -124,8 +124,8 @@ class Controller extends BaseController
         $json = request('json');
 //        $width = floatval(request('width', 4.25)) * 72;
 //        $height = floatval(request('height', 11)) * 72;
-        $width = floatval(request('width', 5.5)) * 96;
-        $height = floatval(request('height', 8.5)) * 96;
+        $width = floatval(request('width', 5.5)) * 72;
+        $height = floatval(request('height', 8.5)) * 72;
 
         $font = request('font') === 'sans-serif' ? 'Helvetica' : 'Georgia';
         $numbering = request('numbering', true);
