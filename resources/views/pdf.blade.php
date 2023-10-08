@@ -156,8 +156,10 @@
     <footer>{{ $today  }}</footer>
 @endif
 <main>
-    @include('legend', compact('types_in_use', 'types'))
-    <div class="row"></div>
+    @if (!empty($options['legend']))
+        @include('legend', compact('types_in_use', 'types'))
+        <div class="row"></div>
+    @endif
 
     @foreach ($days as $day => $meetings)
         @if ($loop->first)
