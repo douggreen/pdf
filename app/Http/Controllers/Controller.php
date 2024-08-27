@@ -85,7 +85,7 @@ class Controller extends BaseController
             'json',
             // TODO: change back to default
 //            'https://demo.code4recovery.org/wp-admin/admin-ajax.php?action=meetings',
-            'https://blueridgeareaintergroup.org/wp-admin/admin-ajax.php?action=meetings'
+            'https://aablueridge.org/wp-admin/admin-ajax.php?action=meetings'
         );
         $width = request('width', 5.5);
         $height = request('height', 8.5);
